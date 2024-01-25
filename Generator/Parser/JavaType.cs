@@ -15,6 +15,8 @@ namespace CnpcBlockly.Generator.Parser {
 		public string FullName => $"{packageName}/{Name}";
 		public override string ToString() => FullName;
 
+		public IType? BaseType { get; private set; }
+
 		readonly Dictionary<string, IType> m_typeParameters = [];
 		public IDictionary<string, IType> GetTypeParameters() => m_typeParameters.AsReadOnly();
 
@@ -45,6 +47,12 @@ namespace CnpcBlockly.Generator.Parser {
 			var tnel = tsel.Descendants().FirstOrDefault(e => e.Attribute(CLASS)?.Value == "element-name type-name-label")
 				?? throw new JavaApiFormatException(SR.Error_InvalidType);
 			ParseTypeName(domain, tnel);
+
+			var eiel = tsel.Descendants().FirstOrDefault(e => e.Attribute(CLASS)?.Value == "extends-implements");
+			if (eiel != null) {
+				ParseBaseType(domain, eiel);
+			}
+			BaseType ??= domain.GetType("java/lang/Object") ?? throw new InvalidOperationException(SR.Error_MissingBaseType);
 
 			var fdel = doc.Descendants().FirstOrDefault(e => e.Attribute(ID)?.Value == "field-detail");
 			if (fdel != null) {
@@ -84,6 +92,15 @@ namespace CnpcBlockly.Generator.Parser {
 					}
 				}
 			}
+		}
+
+		void ParseBaseType(Domain domain, XElement element) {
+			var splitter = new FlowSplitter(element);
+			splitter.GetDelimiter();
+			var kw = splitter.GetIdentifier();
+			if (kw != "extends") return;
+			if (splitter.GetDelimiter() != ' ') throw new JavaApiFormatException();
+			BaseType = ParseTypeReference(domain, splitter.GetJavaType() ?? throw new JavaApiFormatException());
 		}
 
 		void ParseField(Domain domain, XElement fel) {
