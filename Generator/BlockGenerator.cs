@@ -132,7 +132,7 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write("},");
 			_generatorWriter.Write($"const $value=g.valueToCode(b,'value',Order.ASSIGNMENT);");
 			_blocksWriter.Write("],");
-			_generatorWriter.Write($"return `{GenerateThisReference(type, typeKey, field)}.{field.Name} = ${{$value}};`;");
+			_generatorWriter.Write($"return `{GenerateThisReference(type, typeKey, field)}.{field.Name} = ${{$value}};\\n`;");
 			_blocksWriter.Write($"'previousStatement':null,");
 			_blocksWriter.Write($"'nextStatement':null,");
 			_blocksWriter.Write($"'colour':0,");
@@ -180,7 +180,7 @@ namespace CnpcBlockly.Generator {
 					_blocksWriter.Write($"'colour':120,");
 			}
 			else {
-				_generatorWriter.Write($"return `{code};`;");
+				_generatorWriter.Write($"return `{code};\\n`;");
 				_blocksWriter.Write($"'previousStatement':null,");
 				_blocksWriter.Write($"'nextStatement':null,");
 				if (setFlag)
