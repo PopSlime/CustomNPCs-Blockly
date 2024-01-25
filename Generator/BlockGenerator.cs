@@ -169,18 +169,18 @@ namespace CnpcBlockly.Generator {
 
 				_generatorWriter.Write($"const _{param.Name}=g.valueToCode(b,'{param.Name}',Order.COMMA);");
 			}
-			var code = $"`{GenerateThisReference(type, typeKey, method, singletonMethod)}.{method.Name}({string.Join(',', method.Parameters.Select(p => $"${{_{p.Name}}}"))})`";
+			var code = $"{GenerateThisReference(type, typeKey, method, singletonMethod)}.{method.Name}({string.Join(',', method.Parameters.Select(p => $"${{_{p.Name}}}"))})";
 			_blocksWriter.Write("],");
 			if (method.ReturnType != null) {
 				_blocksWriter.Write($"'output':'{method.ReturnType.FullName}',");
-				_generatorWriter.Write($"return [{code},Order.FUNCTION_CALL];");
+				_generatorWriter.Write($"return [`{code}`,Order.FUNCTION_CALL];");
 				if (getFlag)
 					_blocksWriter.Write($"'colour':180,");
 				else
 					_blocksWriter.Write($"'colour':120,");
 			}
 			else {
-				_generatorWriter.Write($"return {code};");
+				_generatorWriter.Write($"return `{code};`;");
 				_blocksWriter.Write($"'previousStatement':null,");
 				_blocksWriter.Write($"'nextStatement':null,");
 				if (setFlag)
