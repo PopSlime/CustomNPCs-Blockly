@@ -77,14 +77,36 @@ namespace CnpcBlockly.Generator {
 
 		void GenerateType(IType type) {
 			if (type is JavaType jtype) {
+				var fields = jtype.GetFields();
 				var methods = jtype.GetMethods();
-				if (methods.Count == 0) return;
+				if (fields.Count == 0 && methods.Count == 0) return;
 				var key = $"CNPC_T_{type.FullName.Replace("/", "_1", StringComparison.Ordinal).Replace("$", "_2", StringComparison.Ordinal)}".ToUpperInvariant();
 				_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
 				_msgWriter.Write($"'{key}':'{type.Name}',");
+				foreach (var field in fields) GenerateField(jtype, key, field);
 				foreach (var method in methods) GenerateMethod(jtype, key, method);
 				_toolboxWriter.Write("]},");
 			}
+		}
+
+		void GenerateField(JavaType type, string typeKey, JavaField field) {
+			var key = $"CNPC_F_{typeKey}_3{field.Name}".ToUpperInvariant();
+			_msgWriter.Write($"'{key}':'%1.{field.Name}',");
+
+			_blocksWriter.Write("{");
+			_blocksWriter.Write($"'type':'{key}',");
+			_blocksWriter.Write($"'message0':'%{{BKY_{key}}}',");
+			_blocksWriter.Write("'args0':[");
+			_generatorWriter.Write($"'{key}':function(b,g){{");
+			GenerateThisArgument(type);
+			_blocksWriter.Write("],");
+			_blocksWriter.Write($"'output':'{field.Type.FullName}',");
+			_generatorWriter.Write($"return [`${{$this}}.{field.Name}`,Order.MEMBER];");
+			_blocksWriter.Write($"'colour':30,");
+			_blocksWriter.Write("},");
+			_generatorWriter.Write($"}},");
+
+			AddBlockToToolbox(key);
 		}
 
 		void GenerateMethod(JavaType type, string typeKey, JavaMethod method) {
@@ -98,13 +120,8 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write($"'type':'{key}',");
 			_blocksWriter.Write($"'message0':'%{{BKY_{key}}}',");
 			_blocksWriter.Write("'args0':[");
-			_blocksWriter.Write("{");
-			_blocksWriter.Write($"'type':'input_value',");
-			_blocksWriter.Write($"'name':'this',");
-			_blocksWriter.Write($"'check':'{type.FullName}',");
-			_blocksWriter.Write("},");
 			_generatorWriter.Write($"'{key}':function(b,g){{");
-			_generatorWriter.Write($"const $this=g.valueToCode(b,'this',Order.MEMBER);");
+			GenerateThisArgument(type);
 			foreach (var param in method.Parameters) {
 				_blocksWriter.Write("{");
 				_blocksWriter.Write($"'type':'input_value',");
@@ -136,6 +153,19 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write("},");
 			_generatorWriter.Write($"}},");
 
+			AddBlockToToolbox(key);
+		}
+
+		void GenerateThisArgument(JavaType type) {
+			_blocksWriter.Write("{");
+			_blocksWriter.Write($"'type':'input_value',");
+			_blocksWriter.Write($"'name':'this',");
+			_blocksWriter.Write($"'check':'{type.FullName}',");
+			_blocksWriter.Write("},");
+			_generatorWriter.Write($"const $this=g.valueToCode(b,'this',Order.MEMBER);");
+		}
+
+		void AddBlockToToolbox(string key) {
 			_toolboxWriter.Write("{");
 			_toolboxWriter.Write("'kind':'block',");
 			_toolboxWriter.Write($"'type':'{key}',");
