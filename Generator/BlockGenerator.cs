@@ -118,7 +118,7 @@ namespace CnpcBlockly.Generator {
 			_generatorWriter.Write($"'{key}':function(b,g){{");
 			if (!field.IsStatic) GenerateThisArgument(type);
 			_blocksWriter.Write("],");
-			_blocksWriter.Write($"'output':'{field.Type.FullName}',");
+			_blocksWriter.Write($"'output':[{GetInheritanceChain(field.Type)}],");
 			_generatorWriter.Write($"return [`{GenerateThisReference(type, typeKey, field)}.{field.Name}`,Order.MEMBER];");
 			_blocksWriter.Write($"'colour':30,");
 			_blocksWriter.Write("},");
@@ -184,7 +184,7 @@ namespace CnpcBlockly.Generator {
 			var code = $"{GenerateThisReference(type, typeKey, method, singletonMethod)}.{method.Name}({string.Join(',', method.Parameters.Select(p => $"${{_{p.Name}}}"))})";
 			_blocksWriter.Write("],");
 			if (method.ReturnType != null) {
-				_blocksWriter.Write($"'output':'{method.ReturnType.FullName}',");
+				_blocksWriter.Write($"'output':[{GetInheritanceChain(method.ReturnType)}],");
 				_generatorWriter.Write($"return [`{code}`,Order.FUNCTION_CALL];");
 				if (getFlag)
 					_blocksWriter.Write($"'colour':180,");
@@ -207,6 +207,12 @@ namespace CnpcBlockly.Generator {
 		}
 
 		static string GetTypeKey(IType type) => type.FullName.Replace("/", "_1", StringComparison.Ordinal).Replace("$", "_2", StringComparison.Ordinal);
+
+		static string GetInheritanceChain(IType type) {
+			if (type is JavaType jtype && jtype.BaseType is IType baseType)
+				return $"'{type.FullName}',{GetInheritanceChain(baseType)}";
+			return $"'{type.FullName}'";
+		}
 
 		void GenerateThisArgument(JavaType type) {
 			_blocksWriter.Write("{");
@@ -296,7 +302,7 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write($"'type':'{key}',");
 			_blocksWriter.Write($"'message0':'%{{BKY_{key}}}',");
 			_generatorWriter.Write($"'{key}':function(b,g){{");
-			_blocksWriter.Write($"'output':'{field.Type.FullName}',");
+			_blocksWriter.Write($"'output':[{GetInheritanceChain(field.Type)}],");
 			_generatorWriter.Write($"return [`event.{field.Name}`,Order.MEMBER];");
 			_blocksWriter.Write($"'colour':30,");
 			_blocksWriter.Write("},");
