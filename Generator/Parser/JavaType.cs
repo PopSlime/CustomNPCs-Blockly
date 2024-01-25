@@ -18,6 +18,9 @@ namespace CnpcBlockly.Generator.Parser {
 		readonly Dictionary<string, IType> m_typeParameters = [];
 		public IDictionary<string, IType> GetTypeParameters() => m_typeParameters.AsReadOnly();
 
+		readonly List<JavaField> m_fields = [];
+		public ICollection<JavaField> GetFields() => m_fields.AsReadOnly();
+
 		readonly List<JavaMethod> m_methods = [];
 		public ICollection<JavaMethod> GetMethods() => m_methods.AsReadOnly();
 
@@ -42,6 +45,13 @@ namespace CnpcBlockly.Generator.Parser {
 			var tnel = tsel.Descendants().FirstOrDefault(e => e.Attribute(CLASS)?.Value == "element-name type-name-label")
 				?? throw new JavaApiFormatException(SR.Error_InvalidType);
 			ParseTypeName(domain, tnel);
+
+			var fdel = doc.Descendants().FirstOrDefault(e => e.Attribute(ID)?.Value == "field-detail");
+			if (fdel != null) {
+				foreach (var fel in fdel.Descendants(UL).First().Elements()) {
+					ParseField(domain, fel);
+				}
+			}
 
 			var mdel = doc.Descendants().FirstOrDefault(e => e.Attribute(ID)?.Value == "method-detail");
 			if (mdel != null) {
@@ -74,6 +84,13 @@ namespace CnpcBlockly.Generator.Parser {
 					}
 				}
 			}
+		}
+
+		void ParseField(Domain domain, XElement fel) {
+			var name = fel.Descendants(H3).First().Value;
+			var sigel = fel.Descendants().First(e => e.Attribute(CLASS)?.Value == "member-signature");
+			var returnType = ParseTypeReference(domain, sigel.Descendants().First(e => e.Attribute(CLASS)?.Value == "return-type")) ?? throw new JavaApiFormatException();
+			m_fields.Add(new(name, returnType));
 		}
 
 		void ParseMethod(Domain domain, XElement mel) {
