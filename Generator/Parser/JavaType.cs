@@ -17,6 +17,8 @@ namespace CnpcBlockly.Generator.Parser {
 
 		public IType? BaseType { get; private set; }
 
+		public string? Description { get; private set; }
+
 		readonly Dictionary<string, IType> m_typeParameters = [];
 		public IDictionary<string, IType> GetTypeParameters() => m_typeParameters.AsReadOnly();
 
@@ -41,8 +43,9 @@ namespace CnpcBlockly.Generator.Parser {
 			using var reader = new StreamReader(stream, Shared.Encoding);
 			var src = SolidusTags().Replace(reader.ReadToEnd(), @"<$1 $2 />").Replace("&nbsp;", " ", StringComparison.Ordinal);
 			var doc = XDocument.Parse(src);
+			var cdel = doc.Descendants().FirstOrDefault(e => e.Attribute(ID)?.Value == "class-description") ?? throw new JavaApiFormatException();
 
-			var tsel = doc.Descendants().FirstOrDefault(e => e.Attribute(CLASS)?.Value == "type-signature")
+			var tsel = cdel.Elements().FirstOrDefault(e => e.Attribute(CLASS)?.Value == "type-signature")
 				?? throw new JavaApiFormatException(SR.Error_InvalidType);
 			var tnel = tsel.Descendants().FirstOrDefault(e => e.Attribute(CLASS)?.Value == "element-name type-name-label")
 				?? throw new JavaApiFormatException(SR.Error_InvalidType);
@@ -53,6 +56,9 @@ namespace CnpcBlockly.Generator.Parser {
 				ParseBaseType(domain, eiel);
 			}
 			BaseType ??= domain.GetType("java/lang/Object") ?? throw new InvalidOperationException(SR.Error_MissingBaseType);
+
+			var bel = cdel.Elements().FirstOrDefault(e => e.Attribute(CLASS)?.Value == "block");
+			if (bel != null) Description = bel.Value;
 
 			var fdel = doc.Descendants().FirstOrDefault(e => e.Attribute(ID)?.Value == "field-detail");
 			if (fdel != null) {
