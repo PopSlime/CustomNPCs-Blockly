@@ -12,8 +12,6 @@ namespace CnpcBlockly.Generator {
 		readonly StreamWriter _toolboxWriter;
 		readonly StreamWriter _msgWriter;
 
-		bool _isDisposed;
-
 		public BlockGenerator(Domain domain, DirectoryInfo dir) {
 			ArgumentNullException.ThrowIfNull(domain);
 			ArgumentNullException.ThrowIfNull(dir);
@@ -25,6 +23,7 @@ namespace CnpcBlockly.Generator {
 			_msgWriter = new(new FileStream(Path.Combine(dir.FullName, "msg.g.js"), FileMode.Create, FileAccess.Write), Shared.Encoding);
 		}
 
+		bool _isDisposed;
 		protected virtual void Dispose(bool disposing) {
 			if (_isDisposed) return;
 			if (disposing) {
