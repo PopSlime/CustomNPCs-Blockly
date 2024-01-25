@@ -89,8 +89,13 @@ namespace CnpcBlockly.Generator {
 			}
 		}
 
-		void GenerateField(JavaType type, string typeKey, JavaField field) {
-			var key = $"CNPC_F_{typeKey}_3{field.Name}".ToUpperInvariant();
+		void GenerateField(JavaType jtype, string key, JavaField field) {
+			GenerateFieldGet(jtype, key, field);
+			if (!field.IsFinal) GenerateFieldSet(jtype, key, field);
+		}
+
+		void GenerateFieldGet(JavaType type, string typeKey, JavaField field) {
+			var key = $"CNPC_FG_{typeKey}_3{field.Name}".ToUpperInvariant();
 			_msgWriter.Write($"'{key}':'%1.{field.Name}',");
 
 			_blocksWriter.Write("{");
@@ -103,6 +108,33 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write($"'output':'{field.Type.FullName}',");
 			_generatorWriter.Write($"return [`${{$this}}.{field.Name}`,Order.MEMBER];");
 			_blocksWriter.Write($"'colour':30,");
+			_blocksWriter.Write("},");
+			_generatorWriter.Write($"}},");
+
+			AddBlockToToolbox(key);
+		}
+
+		void GenerateFieldSet(JavaType type, string typeKey, JavaField field) {
+			var key = $"CNPC_FS_{typeKey}_3{field.Name}".ToUpperInvariant();
+			_msgWriter.Write($"'{key}':'%1.{field.Name} = %2',");
+
+			_blocksWriter.Write("{");
+			_blocksWriter.Write($"'type':'{key}',");
+			_blocksWriter.Write($"'message0':'%{{BKY_{key}}}',");
+			_blocksWriter.Write("'args0':[");
+			_generatorWriter.Write($"'{key}':function(b,g){{");
+			GenerateThisArgument(type);
+			_blocksWriter.Write("{");
+			_blocksWriter.Write($"'type':'input_value',");
+			_blocksWriter.Write($"'name':'value',");
+			_blocksWriter.Write($"'check':'{field.Type.FullName}',");
+			_blocksWriter.Write("},");
+			_generatorWriter.Write($"const $value=g.valueToCode(b,'value',Order.ASSIGNMENT);");
+			_blocksWriter.Write("],");
+			_generatorWriter.Write($"return `${{$this}}.{field.Name} = ${{$value}};`;");
+			_blocksWriter.Write($"'previousStatement':null,");
+			_blocksWriter.Write($"'nextStatement':null,");
+			_blocksWriter.Write($"'colour':0,");
 			_blocksWriter.Write("},");
 			_generatorWriter.Write($"}},");
 
