@@ -135,20 +135,20 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write("],");
 			if (method.ReturnType != null) {
 				_blocksWriter.Write($"'output':'{method.ReturnType.FullName}',");
+				_generatorWriter.Write($"return [{code},Order.FUNCTION_CALL];");
 				if (getFlag)
 					_blocksWriter.Write($"'colour':180,");
 				else
 					_blocksWriter.Write($"'colour':120,");
-				_generatorWriter.Write($"return [{code},Order.FUNCTION_CALL];");
 			}
 			else {
+				_generatorWriter.Write($"return {code};");
 				_blocksWriter.Write($"'previousStatement':null,");
 				_blocksWriter.Write($"'nextStatement':null,");
 				if (setFlag)
 					_blocksWriter.Write($"'colour':90,");
 				else
 					_blocksWriter.Write($"'colour':150,");
-				_generatorWriter.Write($"return {code};");
 			}
 			_blocksWriter.Write("},");
 			_generatorWriter.Write($"}},");
