@@ -79,11 +79,13 @@ namespace CnpcBlockly.Generator {
 				var fields = jtype.GetFields();
 				var methods = jtype.GetMethods();
 				if (fields.Count == 0 && methods.Count == 0) return;
-				var key = $"CNPC_T_{type.FullName.Replace("/", "_1", StringComparison.Ordinal).Replace("$", "_2", StringComparison.Ordinal)}".ToUpperInvariant();
+				var typeKey = GetTypeKey(type);
+				var key = $"CNPC_T_{typeKey}".ToUpperInvariant();
 				_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
 				_msgWriter.Write($"'{key}':'{type.Name}',");
-				foreach (var field in fields) GenerateField(jtype, key, field);
+				foreach (var field in fields) GenerateField(jtype, typeKey, field);
 				foreach (var method in methods) GenerateMethod(jtype, key, method);
+				foreach (var method in methods) GenerateMethod(jtype, typeKey, method);
 				_toolboxWriter.Write("]},");
 			}
 		}
@@ -186,6 +188,8 @@ namespace CnpcBlockly.Generator {
 
 			AddBlockToToolbox(key);
 		}
+
+		static string GetTypeKey(IType type) => type.FullName.Replace("/", "_1", StringComparison.Ordinal).Replace("$", "_2", StringComparison.Ordinal);
 
 		void GenerateThisArgument(JavaType type) {
 			_blocksWriter.Write("{");
