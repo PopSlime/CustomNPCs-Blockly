@@ -61,6 +61,7 @@ namespace CnpcBlockly.Generator {
 
 		static void GenerateLicense(TextWriter writer) => writer.WriteLine(Snippets.License);
 
+		#region Generic types
 		void GeneratePackage(JavaPackage package) {
 			var types = package.GetTypes();
 			var key = $"CNPC_P_{package.Name.Replace("/", "_1", StringComparison.Ordinal)}".ToUpperInvariant();
@@ -75,19 +76,18 @@ namespace CnpcBlockly.Generator {
 		}
 
 		void GenerateType(IType type) {
-			if (type is JavaType jtype) {
-				var fields = jtype.GetFields();
-				var methods = jtype.GetMethods();
-				if (fields.Count == 0 && methods.Count == 0) return;
-				var typeKey = GetTypeKey(type);
-				var key = $"CNPC_T_{typeKey}".ToUpperInvariant();
-				_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
-				_msgWriter.Write($"'{key}':'{type.Name}',");
-				foreach (var field in fields) GenerateField(jtype, typeKey, field);
-				var singletonMethod = methods.Where(m => m.ReturnType == type && m.IsStatic && m.Parameters.Count == 0).SingleOrDefault();
-				foreach (var method in methods) GenerateMethod(jtype, typeKey, method, singletonMethod);
-				_toolboxWriter.Write("]},");
-			}
+			if (type is not JavaType jtype) return;
+			var fields = jtype.GetFields();
+			var methods = jtype.GetMethods();
+			if (fields.Count == 0 && methods.Count == 0) return;
+			var typeKey = GetTypeKey(type);
+			var key = $"CNPC_T_{typeKey}".ToUpperInvariant();
+			_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
+			_msgWriter.Write($"'{key}':'{type.Name}',");
+			foreach (var field in fields) GenerateField(jtype, typeKey, field);
+			var singletonMethod = methods.Where(m => m.ReturnType == type && m.IsStatic && m.Parameters.Count == 0).SingleOrDefault();
+			foreach (var method in methods) GenerateMethod(jtype, typeKey, method, singletonMethod);
+			_toolboxWriter.Write("]},");
 		}
 
 		void GenerateField(JavaType jtype, string key, JavaField field) {
@@ -217,5 +217,6 @@ namespace CnpcBlockly.Generator {
 			_toolboxWriter.Write($"'type':'{key}',");
 			_toolboxWriter.Write("},");
 		}
+		#endregion
 	}
 }
