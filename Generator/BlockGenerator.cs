@@ -84,8 +84,8 @@ namespace CnpcBlockly.Generator {
 				_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
 				_msgWriter.Write($"'{key}':'{type.Name}',");
 				foreach (var field in fields) GenerateField(jtype, typeKey, field);
-				foreach (var method in methods) GenerateMethod(jtype, key, method);
-				foreach (var method in methods) GenerateMethod(jtype, typeKey, method);
+				var singletonMethod = methods.Where(m => m.ReturnType == type && m.IsStatic && m.Parameters.Count == 0).SingleOrDefault();
+				foreach (var method in methods) GenerateMethod(jtype, typeKey, method, singletonMethod);
 				_toolboxWriter.Write("]},");
 			}
 		}
@@ -142,9 +142,14 @@ namespace CnpcBlockly.Generator {
 			AddBlockToToolbox(key);
 		}
 
-		void GenerateMethod(JavaType type, string typeKey, JavaMethod method) {
-			var key = $"CNPC_M_{typeKey}_3{method.Name}_4{string.Join("_5", method.Parameters.Select(p => p.Type.FullName.Replace("/", "_1", StringComparison.Ordinal).Replace("$", "_2", StringComparison.Ordinal)))}".ToUpperInvariant();
-			_msgWriter.Write($"'{key}':'%1.{method.Name}({string.Join(", ", method.Parameters.Select((p, i) => $"{p.Name} = %{i + 2}"))})',");
+		void GenerateMethod(JavaType type, string typeKey, JavaMethod method, JavaMethod? singletonMethod = null) {
+			var isStaticOrSingleton = method.IsStatic || singletonMethod != null;
+
+			var key = $"CNPC_M_{typeKey}_3{method.Name}_4{string.Join("_5", method.Parameters.Select(p => GetTypeKey(p.Type)))}".ToUpperInvariant();
+			_msgWriter.Write(isStaticOrSingleton
+				? $"'{key}':'{method.Name}({string.Join(", ", method.Parameters.Select((p, i) => $"{p.Name} = %{i + 1}"))})',"
+				: $"'{key}':'%1.{method.Name}({string.Join(", ", method.Parameters.Select((p, i) => $"{p.Name} = %{i + 2}"))})',"
+			);
 
 			bool getFlag = method.Name.StartsWith("get", StringComparison.Ordinal) && method.ReturnType != null && method.Parameters.Count == 0;
 			bool setFlag = method.Name.StartsWith("set", StringComparison.Ordinal) && method.ReturnType == null && method.Parameters.Count == 1;
@@ -154,7 +159,7 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write($"'message0':'%{{BKY_{key}}}',");
 			_blocksWriter.Write("'args0':[");
 			_generatorWriter.Write($"'{key}':function(b,g){{");
-			GenerateThisArgument(type);
+			if (!isStaticOrSingleton) GenerateThisArgument(type);
 			foreach (var param in method.Parameters) {
 				_blocksWriter.Write("{");
 				_blocksWriter.Write($"'type':'input_value',");
@@ -164,7 +169,7 @@ namespace CnpcBlockly.Generator {
 
 				_generatorWriter.Write($"const _{param.Name}=g.valueToCode(b,'{param.Name}',Order.COMMA);");
 			}
-			var code = $"`${{$this}}.{method.Name}({string.Join(',', method.Parameters.Select(p => $"${{_{p.Name}}}"))})`";
+			var code = $"`{GenerateThisReference(type, typeKey, method, singletonMethod)}.{method.Name}({string.Join(',', method.Parameters.Select(p => $"${{_{p.Name}}}"))})`";
 			_blocksWriter.Write("],");
 			if (method.ReturnType != null) {
 				_blocksWriter.Write($"'output':'{method.ReturnType.FullName}',");
@@ -202,6 +207,8 @@ namespace CnpcBlockly.Generator {
 
 		static string GenerateThisReference(JavaType type, string typeKey, JavaMember member, JavaMethod? singletonMethod = null) => member.IsStatic
 			? $"${{g.provideFunction_('CNPC_T_{typeKey}', `var ${{g.FUNCTION_NAME_PLACEHOLDER_}} = Java.type('{type.FullName.Replace('/', '.').Replace('$', '.')}');`)}}"
+			: singletonMethod != null
+			? $"${{g.provideFunction_('CNPC_I_{typeKey}', `var ${{g.FUNCTION_NAME_PLACEHOLDER_}} = Java.type('{type.FullName.Replace('/', '.').Replace('$', '.')}').{singletonMethod.Name}();`)}}"
 			: "${$this}";
 
 		void AddBlockToToolbox(string key) {
