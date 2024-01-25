@@ -106,13 +106,15 @@ namespace CnpcBlockly.Generator.Parser {
 		void ParseField(Domain domain, XElement fel) {
 			var name = fel.Descendants(H3).First().Value;
 			var sigel = fel.Descendants().First(e => e.Attribute(CLASS)?.Value == "member-signature");
+			ParseModifiers(sigel, out var isStatic, out var isFinal);
 			var returnType = ParseTypeReference(domain, sigel.Descendants().First(e => e.Attribute(CLASS)?.Value == "return-type")) ?? throw new JavaApiFormatException();
-			m_fields.Add(new(name, returnType));
+			m_fields.Add(new(name, isStatic, isFinal, returnType));
 		}
 
 		void ParseMethod(Domain domain, XElement mel) {
 			var name = mel.Descendants(H3).First().Value;
 			var sigel = mel.Descendants().First(e => e.Attribute(CLASS)?.Value == "member-signature");
+			ParseModifiers(sigel, out var isStatic, out var isFinal);
 			var returnType = ParseTypeReference(domain, sigel.Descendants().First(e => e.Attribute(CLASS)?.Value == "return-type"));
 			var parameters = new List<JavaParameter>();
 			var pel = sigel.Descendants().FirstOrDefault(e => e.Attribute(CLASS)?.Value == "parameters");
@@ -145,7 +147,17 @@ namespace CnpcBlockly.Generator.Parser {
 				}
 			}
 		break_while:
-			m_methods.Add(new(name, returnType, parameters));
+			m_methods.Add(new(name, isStatic, isFinal, returnType, parameters));
+		}
+
+		static void ParseModifiers(XElement sigel, out bool isStatic, out bool isFinal) {
+			var model = sigel.Descendants().FirstOrDefault(e => e.Attribute(CLASS)?.Value == "modifiers");
+			isStatic = false;
+			isFinal = false;
+			if (model == null) return;
+			var mods = model.Value.Split(' ');
+			isStatic = mods.Contains("static");
+			isFinal = mods.Contains("final");
 		}
 
 		IType? ParseTypeReference(Domain domain, XElement element) {
