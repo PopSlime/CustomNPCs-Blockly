@@ -1,16 +1,20 @@
 using CnpcBlockly.Generator.Parser;
 using CnpcBlockly.Generator.Resources;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace CnpcBlockly.Generator {
-	public class BlockGenerator : IDisposable {
+	public partial class BlockGenerator : IDisposable {
 		readonly Domain _domain;
 		readonly StreamWriter _blocksWriter;
 		readonly StreamWriter _generatorWriter;
 		readonly StreamWriter _toolboxWriter;
 		readonly StreamWriter _msgWriter;
+
+		public JavaType? RootEventType { get; set; }
 
 		public BlockGenerator(Domain domain, DirectoryInfo dir) {
 			ArgumentNullException.ThrowIfNull(domain);
@@ -39,6 +43,7 @@ namespace CnpcBlockly.Generator {
 			GC.SuppressFinalize(this);
 		}
 
+		ICollection<IType>? _types;
 		public void Generate() {
 			GenerateLicense(_blocksWriter);
 			GenerateLicense(_toolboxWriter);
@@ -49,10 +54,12 @@ namespace CnpcBlockly.Generator {
 			_toolboxWriter.Write(Snippets.ToolboxBuiltin);
 			_toolboxWriter.Write("{'kind':'category','name':'%{BKY_CNPC}','contents':[");
 			_msgWriter.Write("export const msg={'CNPC':'Custom NPCs',");
+			_types = _domain.GetTypes().Values;
 			foreach (var package in _domain.GetPackages().Values) {
 				if (!package.Name.Contains('/', StringComparison.Ordinal))
 					GeneratePackage(package);
 			}
+			if (RootEventType != null) GenerateEvent(RootEventType, Enumerable.Empty<string>());
 			_blocksWriter.Write("]);");
 			_generatorWriter.Write("};");
 			_toolboxWriter.Write("]}]};");
@@ -63,17 +70,22 @@ namespace CnpcBlockly.Generator {
 
 		#region Generic types
 		void GeneratePackage(JavaPackage package) {
-			var types = package.GetTypes();
+			IEnumerable<JavaType> ttypes = package.GetTypes().OrderBy(t => t.Name);
+			if (RootEventType != null)
+				ttypes = ttypes.Where(t => !IsAssignableTo(t, RootEventType));
+			var types = ttypes.ToArray();
 			var key = $"CNPC_P_{package.Name.Replace("/", "_1", StringComparison.Ordinal)}".ToUpperInvariant();
-			if (types.Count > 0) {
+			if (types.Length > 0) {
 				_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
 				_msgWriter.Write($"'{key}':'{package.Name}',");
 			}
 			foreach (var type in types) GenerateType(type);
 			foreach (var sp in package.GetSubpackages()) GeneratePackage(sp);
-			if (types.Count > 0)
+			if (types.Length > 0)
 				_toolboxWriter.Write("]},");
 		}
+
+		static bool IsAssignableTo(JavaType src, JavaType dest) => src == dest || (src.BaseType is JavaType baseType && IsAssignableTo(baseType, dest));
 
 		void GenerateType(IType type) {
 			if (type is not JavaType jtype) return;
@@ -211,11 +223,117 @@ namespace CnpcBlockly.Generator {
 			? $"${{g.provideFunction_('CNPC_I_{typeKey}', `var ${{g.FUNCTION_NAME_PLACEHOLDER_}} = Java.type('{type.FullName.Replace('/', '.').Replace('$', '.')}').{singletonMethod.Name}();`)}}"
 			: "${$this}";
 
+		readonly List<string> _blocks = [];
 		void AddBlockToToolbox(string key) {
 			_toolboxWriter.Write("{");
 			_toolboxWriter.Write("'kind':'block',");
 			_toolboxWriter.Write($"'type':'{key}',");
 			_toolboxWriter.Write("},");
+			_blocks.Add(key);
+		}
+		#endregion
+
+		#region Event types
+		void GenerateEvent(JavaType type, IEnumerable<string> inheritedBlocks) {
+			var fields = type.GetFields();
+			var methods = type.GetMethods();
+			var typeKey = GetTypeKey(type);
+			var key = $"CNPC_T_{typeKey}".ToUpperInvariant();
+			_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
+			_msgWriter.Write($"'{key}':'{type.Name}',");
+			GenerateEventHook(type, typeKey);
+			_blocks.Clear();
+			foreach (var field in fields) GenerateEventField(type, typeKey, field);
+			var iblocks = _blocks.ToArray().Concat(inheritedBlocks);
+			foreach (var block in inheritedBlocks) AddBlockToToolbox(block);
+			foreach (var subtype in _types!.OfType<JavaType>().Where(t => t.BaseType == type).OrderBy(t => t.Name)) GenerateEvent(subtype, iblocks);
+			_toolboxWriter.Write("]},");
+		}
+
+		[GeneratedRegex(@"Hook function name: (\w*)")]
+		private static partial Regex HookFunctionName();
+		void GenerateEventHook(JavaType type, string typeKey) {
+			var match = HookFunctionName().Match(type.Description ?? "");
+			if (!match.Success) return;
+
+			var key = $"CNPC_E_{typeKey}".ToUpperInvariant();
+			_msgWriter.Write($"'{key}':'event {type.Name}\\n%1',");
+
+			_blocksWriter.Write("{");
+			_blocksWriter.Write($"'type':'{key}',");
+			_blocksWriter.Write($"'message0':'%{{BKY_{key}}}',");
+			_blocksWriter.Write("'args0':[");
+			_blocksWriter.Write("{");
+			_blocksWriter.Write($"'type':'input_statement',");
+			_blocksWriter.Write($"'name':'statement',");
+			_blocksWriter.Write("},");
+			_generatorWriter.Write($"'{key}':function(b,g){{");
+			var code = $"`function {match.Groups[1].Value}(event) {{\\n${{g.statementToCode(b, 'statement')}}}}`";
+			_blocksWriter.Write("],");
+			_generatorWriter.Write($"return {code};");
+			_blocksWriter.Write($"'colour':60,");
+			_blocksWriter.Write("},");
+			_generatorWriter.Write($"}},");
+
+			AddBlockToToolbox(key);
+		}
+
+		void GenerateEventField(JavaType jtype, string key, JavaField field) {
+			GenerateEventFieldGet(jtype, key, field);
+			if (!field.IsFinal) GenerateEventFieldSet(jtype, key, field);
+		}
+
+		void GenerateEventFieldGet(JavaType type, string typeKey, JavaField field) {
+			if (field.IsStatic) {
+				GenerateFieldGet(type, typeKey, field);
+				return;
+			}
+
+			var key = $"CNPC_FG_{typeKey}_3{field.Name}".ToUpperInvariant();
+			_msgWriter.Write($"'{key}':'event.{field.Name}',");
+
+			_blocksWriter.Write("{");
+			_blocksWriter.Write($"'type':'{key}',");
+			_blocksWriter.Write($"'message0':'%{{BKY_{key}}}',");
+			_generatorWriter.Write($"'{key}':function(b,g){{");
+			_blocksWriter.Write($"'output':'{field.Type.FullName}',");
+			_generatorWriter.Write($"return [`event.{field.Name}`,Order.MEMBER];");
+			_blocksWriter.Write($"'colour':30,");
+			_blocksWriter.Write("},");
+			_generatorWriter.Write($"}},");
+
+			AddBlockToToolbox(key);
+		}
+
+		void GenerateEventFieldSet(JavaType type, string typeKey, JavaField field) {
+			if (field.IsStatic) {
+				GenerateFieldSet(type, typeKey, field);
+				return;
+			}
+
+			var key = $"CNPC_FS_{typeKey}_3{field.Name}".ToUpperInvariant();
+			_msgWriter.Write($"'{key}':'event.{field.Name} = %1',");
+
+			_blocksWriter.Write("{");
+			_blocksWriter.Write($"'type':'{key}',");
+			_blocksWriter.Write($"'message0':'%{{BKY_{key}}}',");
+			_blocksWriter.Write("'args0':[");
+			_generatorWriter.Write($"'{key}':function(b,g){{");
+			_blocksWriter.Write("{");
+			_blocksWriter.Write($"'type':'input_value',");
+			_blocksWriter.Write($"'name':'value',");
+			_blocksWriter.Write($"'check':'{field.Type.FullName}',");
+			_blocksWriter.Write("},");
+			_generatorWriter.Write($"const $value=g.valueToCode(b,'value',Order.ASSIGNMENT);");
+			_blocksWriter.Write("],");
+			_generatorWriter.Write($"return `event.{field.Name} = ${{$value}};\\n`;");
+			_blocksWriter.Write($"'previousStatement':null,");
+			_blocksWriter.Write($"'nextStatement':null,");
+			_blocksWriter.Write($"'colour':0,");
+			_blocksWriter.Write("},");
+			_generatorWriter.Write($"}},");
+
+			AddBlockToToolbox(key);
 		}
 		#endregion
 	}

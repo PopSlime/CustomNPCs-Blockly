@@ -22,6 +22,7 @@ namespace CnpcBlockly.Generator {
 			domain.Flatten(package);
 			domain.ParseTypes();
 			using var generator = new BlockGenerator(domain, new(Environment.CurrentDirectory));
+			generator.RootEventType = domain.GetType("noppes/npcs/api/event/CustomNPCsEvent") as JavaType;
 			generator.Generate();
 		}
 
