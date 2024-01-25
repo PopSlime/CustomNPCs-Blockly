@@ -97,17 +97,17 @@ namespace CnpcBlockly.Generator {
 
 		void GenerateFieldGet(JavaType type, string typeKey, JavaField field) {
 			var key = $"CNPC_FG_{typeKey}_3{field.Name}".ToUpperInvariant();
-			_msgWriter.Write($"'{key}':'%1.{field.Name}',");
+			_msgWriter.Write(field.IsStatic ? $"'{key}':'{field.Name}'," : $"'{key}':'%1.{field.Name}',");
 
 			_blocksWriter.Write("{");
 			_blocksWriter.Write($"'type':'{key}',");
 			_blocksWriter.Write($"'message0':'%{{BKY_{key}}}',");
 			_blocksWriter.Write("'args0':[");
 			_generatorWriter.Write($"'{key}':function(b,g){{");
-			GenerateThisArgument(type);
+			if (!field.IsStatic) GenerateThisArgument(type);
 			_blocksWriter.Write("],");
 			_blocksWriter.Write($"'output':'{field.Type.FullName}',");
-			_generatorWriter.Write($"return [`${{$this}}.{field.Name}`,Order.MEMBER];");
+			_generatorWriter.Write($"return [`{GenerateThisReference(type, typeKey, field)}.{field.Name}`,Order.MEMBER];");
 			_blocksWriter.Write($"'colour':30,");
 			_blocksWriter.Write("},");
 			_generatorWriter.Write($"}},");
@@ -117,14 +117,14 @@ namespace CnpcBlockly.Generator {
 
 		void GenerateFieldSet(JavaType type, string typeKey, JavaField field) {
 			var key = $"CNPC_FS_{typeKey}_3{field.Name}".ToUpperInvariant();
-			_msgWriter.Write($"'{key}':'%1.{field.Name} = %2',");
+			_msgWriter.Write(field.IsStatic ? $"'{key}':'{field.Name} = %1'," : $"'{key}':'%1.{field.Name} = %2',");
 
 			_blocksWriter.Write("{");
 			_blocksWriter.Write($"'type':'{key}',");
 			_blocksWriter.Write($"'message0':'%{{BKY_{key}}}',");
 			_blocksWriter.Write("'args0':[");
 			_generatorWriter.Write($"'{key}':function(b,g){{");
-			GenerateThisArgument(type);
+			if (!field.IsStatic) GenerateThisArgument(type);
 			_blocksWriter.Write("{");
 			_blocksWriter.Write($"'type':'input_value',");
 			_blocksWriter.Write($"'name':'value',");
@@ -132,7 +132,7 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write("},");
 			_generatorWriter.Write($"const $value=g.valueToCode(b,'value',Order.ASSIGNMENT);");
 			_blocksWriter.Write("],");
-			_generatorWriter.Write($"return `${{$this}}.{field.Name} = ${{$value}};`;");
+			_generatorWriter.Write($"return `{GenerateThisReference(type, typeKey, field)}.{field.Name} = ${{$value}};`;");
 			_blocksWriter.Write($"'previousStatement':null,");
 			_blocksWriter.Write($"'nextStatement':null,");
 			_blocksWriter.Write($"'colour':0,");
@@ -199,6 +199,10 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write("},");
 			_generatorWriter.Write($"const $this=g.valueToCode(b,'this',Order.MEMBER);");
 		}
+
+		static string GenerateThisReference(JavaType type, string typeKey, JavaMember member, JavaMethod? singletonMethod = null) => member.IsStatic
+			? $"${{g.provideFunction_('CNPC_T_{typeKey}', `var ${{g.FUNCTION_NAME_PLACEHOLDER_}} = Java.type('{type.FullName.Replace('/', '.').Replace('$', '.')}');`)}}"
+			: "${$this}";
 
 		void AddBlockToToolbox(string key) {
 			_toolboxWriter.Write("{");
