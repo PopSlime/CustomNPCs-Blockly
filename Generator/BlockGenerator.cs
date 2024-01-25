@@ -8,6 +8,7 @@ namespace CnpcBlockly.Generator {
 	public class BlockGenerator : IDisposable {
 		readonly Domain _domain;
 		readonly StreamWriter _blocksWriter;
+		readonly StreamWriter _generatorWriter;
 		readonly StreamWriter _toolboxWriter;
 		readonly StreamWriter _msgWriter;
 
@@ -19,6 +20,7 @@ namespace CnpcBlockly.Generator {
 
 			_domain = domain;
 			_blocksWriter = new(new FileStream(Path.Combine(dir.FullName, "blocks.g.js"), FileMode.Create, FileAccess.Write), Shared.Encoding);
+			_generatorWriter = new(new FileStream(Path.Combine(dir.FullName, "generator.g.js"), FileMode.Create, FileAccess.Write), Shared.Encoding);
 			_toolboxWriter = new(new FileStream(Path.Combine(dir.FullName, "toolbox.g.js"), FileMode.Create, FileAccess.Write), Shared.Encoding);
 			_msgWriter = new(new FileStream(Path.Combine(dir.FullName, "msg.g.js"), FileMode.Create, FileAccess.Write), Shared.Encoding);
 		}
@@ -27,6 +29,7 @@ namespace CnpcBlockly.Generator {
 			if (_isDisposed) return;
 			if (disposing) {
 				_blocksWriter.Dispose();
+				_generatorWriter.Dispose();
 				_toolboxWriter.Dispose();
 				_msgWriter.Dispose();
 			}
@@ -42,6 +45,7 @@ namespace CnpcBlockly.Generator {
 			GenerateLicense(_toolboxWriter);
 			GenerateLicense(_msgWriter);
 			_blocksWriter.Write("import * as Blockly from 'blockly/core';export const blocks=Blockly.common.createBlockDefinitionsFromJsonArray([");
+			_generatorWriter.Write("import {Order} from 'blockly/javascript';export const forBlock={");
 			_toolboxWriter.Write("export const toolbox={'kind':'categoryToolbox','contents':[");
 			_toolboxWriter.Write(Snippets.ToolboxBuiltin);
 			_toolboxWriter.Write("{'kind':'category','name':'%{BKY_CNPC}','contents':[");
@@ -51,6 +55,7 @@ namespace CnpcBlockly.Generator {
 					GeneratePackage(package);
 			}
 			_blocksWriter.Write("]);");
+			_generatorWriter.Write("};");
 			_toolboxWriter.Write("]}]};");
 			_msgWriter.Write("};");
 		}
@@ -98,13 +103,18 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write($"'name':'this',");
 			_blocksWriter.Write($"'check':'{type.FullName}',");
 			_blocksWriter.Write("},");
+			_generatorWriter.Write($"'{key}':function(b,g){{");
+			_generatorWriter.Write($"const $this=g.valueToCode(b,'this',Order.MEMBER);");
 			foreach (var param in method.Parameters) {
 				_blocksWriter.Write("{");
 				_blocksWriter.Write($"'type':'input_value',");
 				_blocksWriter.Write($"'name':'{param.Name}',");
 				_blocksWriter.Write($"'check':'{param.Type.FullName}',");
 				_blocksWriter.Write("},");
+
+				_generatorWriter.Write($"const _{param.Name}=g.valueToCode(b,'{param.Name}',Order.COMMA);");
 			}
+			var code = $"`${{$this}}.{method.Name}({string.Join(',', method.Parameters.Select(p => $"${{_{p.Name}}}"))})`";
 			_blocksWriter.Write("],");
 			if (method.ReturnType != null) {
 				_blocksWriter.Write($"'output':'{method.ReturnType.FullName}',");
@@ -112,6 +122,7 @@ namespace CnpcBlockly.Generator {
 					_blocksWriter.Write($"'colour':180,");
 				else
 					_blocksWriter.Write($"'colour':120,");
+				_generatorWriter.Write($"return [{code},Order.FUNCTION_CALL];");
 			}
 			else {
 				_blocksWriter.Write($"'previousStatement':null,");
@@ -120,8 +131,10 @@ namespace CnpcBlockly.Generator {
 					_blocksWriter.Write($"'colour':90,");
 				else
 					_blocksWriter.Write($"'colour':150,");
+				_generatorWriter.Write($"return {code};");
 			}
 			_blocksWriter.Write("},");
+			_generatorWriter.Write($"}},");
 
 			_toolboxWriter.Write("{");
 			_toolboxWriter.Write("'kind':'block',");
