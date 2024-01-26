@@ -39,12 +39,10 @@ const ws = Blockly.inject(blocklyDiv, { toolbox: cnpcToolbox });
 // generated code from the workspace, and evals the code.
 // In a real application, you probably shouldn't use `eval`.
 const runCode = () => {
-  const code = javascriptGenerator.workspaceToCode(ws);
-  codeDiv.innerText = code;
+	const code = javascriptGenerator.workspaceToCode(ws);
+	codeDiv.innerText = code;
 
-  outputDiv.innerHTML = '';
-
-  eval(code);
+	outputDiv.innerHTML = '';
 };
 
 // Load the initial state from storage and run the code.
@@ -53,21 +51,21 @@ runCode();
 
 // Every time the workspace changes state, save the changes to storage.
 ws.addChangeListener((e) => {
-  // UI events are things like scrolling, zooming, etc.
-  // No need to save after one of these.
-  if (e.isUiEvent) return;
-  save(ws);
+	// UI events are things like scrolling, zooming, etc.
+	// No need to save after one of these.
+	if (e.isUiEvent) return;
+	save(ws);
 });
 
 
 // Whenever the workspace changes meaningfully, run the code again.
 ws.addChangeListener((e) => {
-  // Don't run the code when the workspace finishes loading; we're
-  // already running it once when the application starts.
-  // Don't run the code during drags; we might have invalid state.
-  if (e.isUiEvent || e.type == Blockly.Events.FINISHED_LOADING ||
-    ws.isDragging()) {
-    return;
-  }
-  runCode();
+	// Don't run the code when the workspace finishes loading; we're
+	// already running it once when the application starts.
+	// Don't run the code during drags; we might have invalid state.
+	if (e.isUiEvent || e.type == Blockly.Events.FINISHED_LOADING ||
+		ws.isDragging()) {
+		return;
+	}
+	runCode();
 });
