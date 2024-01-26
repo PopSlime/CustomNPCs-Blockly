@@ -8,6 +8,10 @@ import * as Blockly from 'blockly';
 import { javascriptGenerator } from 'blockly/javascript';
 import { save, load } from './serialization';
 
+import { blocks as eventBlocks } from './event-bus-api/blocks';
+import { forBlock as eventForBlocks } from './event-bus-api/generator';
+import { msg as eventMsg } from './event-bus-api/msg';
+
 import { blocks as cnpcBlocks } from './custom-npcs/blocks.g';
 import { forBlock as cnpcForBlocks } from './custom-npcs/generator.g';
 import { toolbox as cnpcToolbox } from './custom-npcs/toolbox.g';
@@ -15,17 +19,21 @@ import { msg as cnpcMsg } from './custom-npcs/msg.g';
 
 import './index.css';
 
+javascriptGenerator.addReservedWords("event");
+Blockly.setLocale(eventMsg);
 Blockly.setLocale(cnpcMsg);
 
 // Register the blocks and generator with Blockly
+Blockly.common.defineBlocks(eventBlocks);
 Blockly.common.defineBlocks(cnpcBlocks);
+Object.assign(javascriptGenerator.forBlock, eventForBlocks);
 Object.assign(javascriptGenerator.forBlock, cnpcForBlocks);
 
 // Set up UI elements and inject Blockly
 const codeDiv = document.getElementById('generatedCode').firstChild;
 const outputDiv = document.getElementById('output');
 const blocklyDiv = document.getElementById('blocklyDiv');
-const ws = Blockly.inject(blocklyDiv, {toolbox});
+const ws = Blockly.inject(blocklyDiv, { toolbox: cnpcToolbox });
 
 // This function resets the code and output divs, shows the
 // generated code from the workspace, and evals the code.
