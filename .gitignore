@@ -11,6 +11,7 @@
 *.sln.docstates
 
 dist/
+*.g.js
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
