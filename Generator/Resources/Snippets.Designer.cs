@@ -61,6 +61,24 @@ namespace CnpcBlockly.Generator.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CNPC_E__3ISCANCELABLE,CNPC_E__3ISCANCELED.
+        /// </summary>
+        internal static string BlocksEvent {
+            get {
+                return ResourceManager.GetString("BlocksEvent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CNPC_E__3SETCANCELED.
+        /// </summary>
+        internal static string BlocksEventCancelable {
+            get {
+                return ResourceManager.GetString("BlocksEventCancelable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to /**
         /// * @license
         /// * Copyright 2024 Cryville

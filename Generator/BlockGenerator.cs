@@ -57,7 +57,10 @@ namespace CnpcBlockly.Generator {
 				if (!package.Name.Contains('/', StringComparison.Ordinal))
 					GeneratePackage(package);
 			}
-			if (RootEventType != null) GenerateEvent(RootEventType, Enumerable.Empty<string>());
+			if (RootEventType != null) {
+				_cancelableEventBlocks = Snippets.BlocksEventCancelable.Split(',', StringSplitOptions.RemoveEmptyEntries);
+				GenerateEvent(RootEventType, Snippets.BlocksEvent.Split(',', StringSplitOptions.RemoveEmptyEntries));
+			}
 			_blocksWriter.Write("]);");
 			_generatorWriter.Write("};");
 			_toolboxWriter.Write("]}]};");

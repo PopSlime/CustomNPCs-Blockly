@@ -15,6 +15,9 @@ namespace CnpcBlockly.Generator {
 			_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
 			_msgWriter.Write($"'{key}':'{type.Name}',");
 			GenerateEventHook(type, typeKey);
+			if (type.Description == null || !type.Description.Contains("not cancelable", StringComparison.InvariantCultureIgnoreCase)) {
+				foreach (var block in _cancelableEventBlocks!) AddBlockToToolbox(block);
+			}
 			_blocks.Clear();
 			foreach (var field in fields) GenerateEventField(type, typeKey, field);
 			var iblocks = _blocks.ToArray().Concat(inheritedBlocks);
