@@ -5,16 +5,21 @@
  */
 
 import * as Blockly from 'blockly';
-import {blocks} from './blocks/text';
-import {forBlock} from './generators/javascript';
-import {javascriptGenerator} from 'blockly/javascript';
-import {save, load} from './serialization';
-import {toolbox} from './toolbox';
+import { javascriptGenerator } from 'blockly/javascript';
+import { save, load } from './serialization';
+
+import { blocks as cnpcBlocks } from './custom-npcs/blocks.g';
+import { forBlock as cnpcForBlocks } from './custom-npcs/generator.g';
+import { toolbox as cnpcToolbox } from './custom-npcs/toolbox.g';
+import { msg as cnpcMsg } from './custom-npcs/msg.g';
+
 import './index.css';
 
+Blockly.setLocale(cnpcMsg);
+
 // Register the blocks and generator with Blockly
-Blockly.common.defineBlocks(blocks);
-Object.assign(javascriptGenerator.forBlock, forBlock);
+Blockly.common.defineBlocks(cnpcBlocks);
+Object.assign(javascriptGenerator.forBlock, cnpcForBlocks);
 
 // Set up UI elements and inject Blockly
 const codeDiv = document.getElementById('generatedCode').firstChild;
