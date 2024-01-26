@@ -16,7 +16,7 @@ namespace CnpcBlockly.Generator {
 				Console.Write(SR.Prompt_InputApiPath);
 				apiPath = Console.ReadLine() ?? string.Empty;
 			}
-			var package = JavaPackage.Collect(new(Path.Combine(apiPath, "output", "noppes")), "noppes");
+			var package = JavaPackage.Collect(new(Path.Combine(apiPath, "noppes")), "noppes");
 			var domain = new Domain();
 			InjectBuiltinTypes(domain);
 			domain.Flatten(package);
