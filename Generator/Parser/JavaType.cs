@@ -281,6 +281,7 @@ namespace CnpcBlockly.Generator.Parser {
 			public XElement? GetJavaType() {
 				if (!Next()) return null;
 				XElement result = new(TYPE);
+			loop_unknown_type:
 				if (_isText)
 					result.Add(GetIdentifier());
 				else
@@ -313,6 +314,10 @@ namespace CnpcBlockly.Generator.Parser {
 				break_while:
 					start = _index;
 					sep = GetDelimiter();
+				}
+				else if (sep == '.' && _index < _current.Length && _current[_index] != '.') {
+					result.Add(".");
+					goto loop_unknown_type;
 				}
 				while (sep == '[') {
 					if (GetDelimiter(end: true) != ']') throw new JavaApiFormatException();
