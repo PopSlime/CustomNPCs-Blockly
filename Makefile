@@ -5,6 +5,7 @@ editor: cnpc-blocks
 
 cnpc-blocks: cnpc-block-generator
 	dotnet ./Generator/bin/Release/net8.0/Generator.dll $(CNPC_API_DIR)
+	mkdir ./Editor/src/custom-npcs/
 	find . -maxdepth 1 -type f -name "*.g.js" -exec mv '{}' ./Editor/src/custom-npcs/ \;
 
 cnpc-block-generator:
