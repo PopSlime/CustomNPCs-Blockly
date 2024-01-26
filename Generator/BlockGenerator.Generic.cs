@@ -103,7 +103,7 @@ namespace CnpcBlockly.Generator {
 			);
 
 			var prefix = MethodPrefix().Match(method.Name).Value;
-			bool getFlag = (prefix is "get" or "in" or "is" or "has") && method.ReturnType != null && method.Parameters.Count == 0;
+			bool getFlag = (prefix is "get" or "in" or "is" or "has" or "can") && method.ReturnType != null && method.Parameters.Count == 0;
 			bool setFlag = (prefix is "set") && method.ReturnType == null && method.Parameters.Count == 1;
 
 			_blocksWriter.Write("{");
