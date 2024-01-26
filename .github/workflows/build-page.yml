@@ -36,6 +36,7 @@ jobs:
           dotnet-version: 8.x
       - name: Install NPM Dependencies
         run: npm install
+        working-directory: Editor
       - name: Build Editor
         run: make
         env:
