@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<AnalysisLevel>latest-all</AnalysisLevel>
+		<RootNamespace>CnpcBlockly.Generator</RootNamespace>
+		<NeutralLanguage>en-US</NeutralLanguage>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resources\Snippets.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Snippets.resx</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\SR.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>SR.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\Snippets.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Snippets.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	  <EmbeddedResource Update="Resources\SR.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>SR.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	</ItemGroup>
+
+</Project>
