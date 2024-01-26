@@ -91,6 +91,8 @@ namespace CnpcBlockly.Generator {
 			AddBlockToToolbox(key);
 		}
 
+		[GeneratedRegex(@"^[a-z]*")]
+		private static partial Regex MethodPrefix();
 		void GenerateMethod(JavaType type, string typeKey, JavaMethod method, JavaMethod? singletonMethod = null) {
 			var isStaticOrSingleton = method.IsStatic || singletonMethod != null;
 
@@ -100,8 +102,9 @@ namespace CnpcBlockly.Generator {
 				: $"'{key}':'%1.{method.Name}({string.Join(", ", method.Parameters.Select((p, i) => $"{p.Name} = %{i + 2}"))})',"
 			);
 
-			bool getFlag = method.Name.StartsWith("get", StringComparison.Ordinal) && method.ReturnType != null && method.Parameters.Count == 0;
-			bool setFlag = method.Name.StartsWith("set", StringComparison.Ordinal) && method.ReturnType == null && method.Parameters.Count == 1;
+			var prefix = MethodPrefix().Match(method.Name).Value;
+			bool getFlag = (prefix is "get" or "in" or "is" or "has") && method.ReturnType != null && method.Parameters.Count == 0;
+			bool setFlag = (prefix is "set") && method.ReturnType == null && method.Parameters.Count == 1;
 
 			_blocksWriter.Write("{");
 			_blocksWriter.Write($"'type':'{key}',");
