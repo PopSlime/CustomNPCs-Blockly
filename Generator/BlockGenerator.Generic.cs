@@ -156,9 +156,11 @@ namespace CnpcBlockly.Generator {
 		}
 
 		static string GenerateThisReference(JavaType type, string typeKey, JavaMember member, JavaMethod? singletonMethod = null) => member.IsStatic
-			? $"${{g.provideFunction_('CNPC_T_{typeKey}', `var ${{g.FUNCTION_NAME_PLACEHOLDER_}} = Java.type('{type.FullName.Replace('/', '.').Replace('$', '.')}');`)}}"
+			? GenerateTypeReference(type, typeKey)
 			: singletonMethod != null
-			? $"${{g.provideFunction_('CNPC_I_{typeKey}', `var ${{g.FUNCTION_NAME_PLACEHOLDER_}} = Java.type('{type.FullName.Replace('/', '.').Replace('$', '.')}').{singletonMethod.Name}();`)}}"
+			? GenerateTypeReference(type, typeKey, "I", $".{singletonMethod.Name}()")
 			: "${$this}";
+
+		static string GenerateTypeReference(JavaType type, string typeKey, string refPrefix = "T", string refSuffix = "") => $"${{g.provideFunction_('CNPC_{refPrefix}_{typeKey}', `var ${{g.FUNCTION_NAME_PLACEHOLDER_}} = Java.type('{type.FullName.Replace('/', '.').Replace('$', '.')}'){refSuffix};`)}}";
 	}
 }
