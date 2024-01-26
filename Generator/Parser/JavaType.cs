@@ -15,6 +15,8 @@ namespace CnpcBlockly.Generator.Parser {
 		public string FullName => $"{packageName}/{Name}";
 		public override string ToString() => FullName;
 
+		public bool IsValid => true;
+
 		public IType? BaseType { get; private set; }
 
 		public string? Description { get; private set; }

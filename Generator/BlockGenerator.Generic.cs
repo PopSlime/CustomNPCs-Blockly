@@ -26,9 +26,9 @@ namespace CnpcBlockly.Generator {
 
 		void GenerateType(IType type) {
 			if (type is not JavaType jtype) return;
-			var fields = jtype.GetFields();
-			var methods = jtype.GetMethods();
-			if (fields.Count == 0 && methods.Count == 0) return;
+			var fields = jtype.GetFields().Where(m => m.IsValid).ToArray();
+			var methods = jtype.GetMethods().Where(m => m.IsValid).ToArray();
+			if (fields.Length == 0 && methods.Length == 0) return;
 			var typeKey = GetTypeKey(type);
 			var key = $"CNPC_T_{typeKey}".ToUpperInvariant();
 			_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");

@@ -4,6 +4,8 @@ namespace CnpcBlockly.Generator.Parser {
 
 		public string FullName => fullName;
 
+		public bool IsValid => true;
+
 		public void Parse(Domain domain) { }
 
 		public override string ToString() => $"! {FullName}";

@@ -8,8 +8,7 @@ namespace CnpcBlockly.Generator {
 	public partial class BlockGenerator {
 		string[]? _cancelableEventBlocks;
 		void GenerateEvent(JavaType type, IEnumerable<string> inheritedBlocks) {
-			var fields = type.GetFields();
-			var methods = type.GetMethods();
+			var fields = type.GetFields().Where(m => m.IsValid);
 			var typeKey = GetTypeKey(type);
 			var key = $"CNPC_T_{typeKey}".ToUpperInvariant();
 			_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
