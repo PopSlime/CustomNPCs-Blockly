@@ -1,4 +1,4 @@
-CNPC_API_DIR ?= ../CustomNPCsAPI
+CNPC_API_DIR ?= ../CustomNPCsAPI/output
 
 editor: cnpc-blocks
 	cd ./Editor && npm run build
