@@ -17,15 +17,19 @@ import { forBlock as cnpcForBlocks } from './custom-npcs/generator.g';
 import { toolbox as cnpcToolbox } from './custom-npcs/toolbox.g';
 import { msg as cnpcMsg } from './custom-npcs/msg.g';
 
+import { blocks as cnpcBlockOverrides, msg as cnpcMsgOverrides } from './custom-npcs/overrides';
+
 import './index.css';
 
 javascriptGenerator.addReservedWords("event");
 Blockly.setLocale(eventMsg);
 Blockly.setLocale(cnpcMsg);
+Blockly.setLocale(cnpcMsgOverrides);
 
 // Register the blocks and generator with Blockly
 Blockly.common.defineBlocks(eventBlocks);
 Blockly.common.defineBlocks(cnpcBlocks);
+Blockly.common.defineBlocks(cnpcBlockOverrides);
 Object.assign(javascriptGenerator.forBlock, eventForBlocks);
 Object.assign(javascriptGenerator.forBlock, cnpcForBlocks);
 
