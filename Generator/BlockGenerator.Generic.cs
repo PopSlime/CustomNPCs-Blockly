@@ -122,7 +122,7 @@ namespace CnpcBlockly.Generator {
 
 				_generatorWriter.Write($"const _{param.Name}=g.valueToCode(b,'{param.Name}',Order.COMMA);");
 			}
-			var code = $"{GenerateThisReference(type, typeKey, method, singletonMethod)}.{method.Name}({string.Join(',', method.Parameters.Select(p => $"${{_{p.Name}}}"))})";
+			var code = $"{GenerateThisReference(type, typeKey, method, singletonMethod)}.{method.Name}({string.Join(", ", method.Parameters.Select(p => $"${{_{p.Name}}}"))})";
 			_blocksWriter.Write("],");
 			if (method.ReturnType != null) {
 				_blocksWriter.Write($"'output':[{GetInheritanceChain(method.ReturnType)}],");
