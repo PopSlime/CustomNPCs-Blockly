@@ -4,6 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import $ from 'jquery';
+
+import hljs from 'highlight.js/lib/core';
+import javascript from 'highlight.js/lib/languages/javascript';
+hljs.registerLanguage('javascript', javascript);
+import 'highlight.js/styles/default.css';
+
 import * as Blockly from 'blockly';
 import { javascriptGenerator } from 'blockly/javascript';
 import { save, load } from './serialization';
@@ -26,50 +33,56 @@ Blockly.setLocale(eventMsg);
 Blockly.setLocale(cnpcMsg);
 Blockly.setLocale(cnpcMsgOverrides);
 
-// Register the blocks and generator with Blockly
+const lang = window.localStorage?.getItem('lang');
+if (lang) {
+	$('#select-language').val(lang);
+	const locale1 = await import(`blockly/msg/${lang}.js`);
+	const locale2 = await import(`./msg/${lang}`);
+	Blockly.setLocale(locale1);
+	Blockly.setLocale(locale2.msg);
+}
+
 Blockly.common.defineBlocks(eventBlocks);
 Blockly.common.defineBlocks(cnpcBlocks);
 Blockly.common.defineBlocks(cnpcBlockOverrides);
 Object.assign(javascriptGenerator.forBlock, eventForBlocks);
 Object.assign(javascriptGenerator.forBlock, cnpcForBlocks);
 
-// Set up UI elements and inject Blockly
-const codeDiv = document.getElementById('generatedCode').firstChild;
-const outputDiv = document.getElementById('output');
-const blocklyDiv = document.getElementById('blocklyDiv');
-const ws = Blockly.inject(blocklyDiv, { toolbox: cnpcToolbox });
+const codeDiv = $('#generated-code').children().first();
+const blocklyDiv = $('#blockly-div');
+const ws = Blockly.inject(blocklyDiv[0], { toolbox: cnpcToolbox });
 
-// This function resets the code and output divs, shows the
-// generated code from the workspace, and evals the code.
-// In a real application, you probably shouldn't use `eval`.
-const runCode = () => {
-	const code = javascriptGenerator.workspaceToCode(ws);
-	codeDiv.innerText = code;
+const tabs = $('#tabs').children();
+const tabContainers = $('#tab-container').children('div');
+$('#tabs').children().on("click", e => {
+	const tab = $(e.target);
+	tabs.removeClass('tab-active');
+	tab.addClass('tab-active');
+	tabContainers.removeClass('tab-active');
+	tabContainers.eq(tab.index()).addClass('tab-active');
+});
 
-	outputDiv.innerHTML = '';
+$('#select-language').on('change', e => {
+	const sel = $(e.target);
+	window.localStorage?.setItem('lang', sel.val());
+	location.reload();
+});
+
+const updateOutput = () => {
+	codeDiv.html(hljs.highlight(javascriptGenerator.workspaceToCode(ws), { language: 'javascript' }).value);
 };
 
-// Load the initial state from storage and run the code.
 load(ws);
-runCode();
+updateOutput();
 
-// Every time the workspace changes state, save the changes to storage.
-ws.addChangeListener((e) => {
-	// UI events are things like scrolling, zooming, etc.
-	// No need to save after one of these.
+ws.addChangeListener(e => {
 	if (e.isUiEvent) return;
 	save(ws);
 });
 
-
-// Whenever the workspace changes meaningfully, run the code again.
-ws.addChangeListener((e) => {
-	// Don't run the code when the workspace finishes loading; we're
-	// already running it once when the application starts.
-	// Don't run the code during drags; we might have invalid state.
-	if (e.isUiEvent || e.type == Blockly.Events.FINISHED_LOADING ||
-		ws.isDragging()) {
+ws.addChangeListener(e => {
+	if (e.isUiEvent || e.type == Blockly.Events.FINISHED_LOADING || ws.isDragging()) {
 		return;
 	}
-	runCode();
+	updateOutput();
 });
