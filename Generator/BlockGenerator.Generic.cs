@@ -13,7 +13,7 @@ namespace CnpcBlockly.Generator {
 			var types = ttypes.ToArray();
 			var key = $"CNPC_P_{package.Name.Replace("/", "_1", StringComparison.Ordinal)}".ToUpperInvariant();
 			if (types.Length > 0) {
-				_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
+				_toolboxWriter.Write($"{{'kind':'category','toolboxitemid':'{key}','name':'%{{BKY_{key}}}','contents':[");
 				_msgWriter.Write($"'{key}':'{package.Name}',");
 			}
 			foreach (var type in types) GenerateType(type);
@@ -31,7 +31,7 @@ namespace CnpcBlockly.Generator {
 			if (fields.Length == 0 && methods.Length == 0) return;
 			var typeKey = GetTypeKey(type);
 			var key = $"CNPC_T_{typeKey}".ToUpperInvariant();
-			_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
+			_toolboxWriter.Write($"{{'kind':'category','toolboxitemid':'{key}','name':'%{{BKY_{key}}}','contents':[");
 			_msgWriter.Write($"'{key}':'{type.Name}',");
 			foreach (var field in fields) GenerateField(jtype, typeKey, field);
 			var singletonMethod = methods.Where(m => m.ReturnType == type && m.IsStatic && m.Parameters.Count == 0).SingleOrDefault();

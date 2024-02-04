@@ -11,7 +11,7 @@ namespace CnpcBlockly.Generator {
 			var fields = type.GetFields().Where(m => m.IsValid);
 			var typeKey = GetTypeKey(type);
 			var key = $"CNPC_T_{typeKey}".ToUpperInvariant();
-			_toolboxWriter.Write($"{{'kind':'category','name':'%{{BKY_{key}}}','contents':[");
+			_toolboxWriter.Write($"{{'kind':'category','toolboxitemid':'{key}','name':'%{{BKY_{key}}}','contents':[");
 			_msgWriter.Write($"'{key}':'{type.Name}',");
 			GenerateEventHook(type, typeKey);
 			if (type.Description == null || !type.Description.Contains("not cancelable", StringComparison.InvariantCultureIgnoreCase)) {
