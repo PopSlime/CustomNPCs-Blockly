@@ -33,7 +33,15 @@ Blockly.setLocale(eventMsg);
 Blockly.setLocale(cnpcMsg);
 Blockly.setLocale(cnpcMsgOverrides);
 
-// Register the blocks and generator with Blockly
+const lang = window.localStorage?.getItem('lang');
+if (lang) {
+	$('#select-language').val(lang);
+	const locale1 = await import(`blockly/msg/${lang}.js`);
+	const locale2 = await import(`./msg/${lang}`);
+	Blockly.setLocale(locale1);
+	Blockly.setLocale(locale2.msg);
+}
+
 Blockly.common.defineBlocks(eventBlocks);
 Blockly.common.defineBlocks(cnpcBlocks);
 Blockly.common.defineBlocks(cnpcBlockOverrides);
@@ -52,6 +60,12 @@ $('#tabs').children().on("click", e => {
 	tab.addClass('tab-active');
 	tabContainers.removeClass('tab-active');
 	tabContainers.eq(tab.index()).addClass('tab-active');
+});
+
+$('#select-language').on('change', e => {
+	const sel = $(e.target);
+	window.localStorage?.setItem('lang', sel.val());
+	location.reload();
 });
 
 const updateOutput = () => {
