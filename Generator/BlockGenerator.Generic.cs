@@ -117,6 +117,7 @@ namespace CnpcBlockly.Generator {
 				_blocksWriter.Write($"'type':'input_value',");
 				_blocksWriter.Write($"'name':'{param.Name}',");
 				_blocksWriter.Write($"'check':'{param.Type.FullName}',");
+				_blocksWriter.Write("'align':'RIGHT',");
 				_blocksWriter.Write("},");
 
 				_generatorWriter.Write($"const _{param.Name}=g.valueToCode(b,'{param.Name}',Order.COMMA);");
@@ -151,6 +152,7 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write($"'type':'input_value',");
 			_blocksWriter.Write($"'name':'this',");
 			_blocksWriter.Write($"'check':'{type.FullName}',");
+			_blocksWriter.Write("'align':'RIGHT',");
 			_blocksWriter.Write("},");
 			_generatorWriter.Write($"const $this=g.valueToCode(b,'this',Order.MEMBER);");
 		}
