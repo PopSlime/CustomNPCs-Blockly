@@ -6,6 +6,11 @@
 
 import $ from 'jquery';
 
+import hljs from 'highlight.js/lib/core';
+import javascript from 'highlight.js/lib/languages/javascript';
+hljs.registerLanguage('javascript', javascript);
+import 'highlight.js/styles/default.css';
+
 import * as Blockly from 'blockly';
 import { javascriptGenerator } from 'blockly/javascript';
 import { save, load } from './serialization';
@@ -50,7 +55,7 @@ $('#tabs').children().on("click", e => {
 });
 
 const updateOutput = () => {
-	codeDiv.text(javascriptGenerator.workspaceToCode(ws));
+	codeDiv.html(hljs.highlight(javascriptGenerator.workspaceToCode(ws), { language: 'javascript' }).value);
 };
 
 load(ws);
