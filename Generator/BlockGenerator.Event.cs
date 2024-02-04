@@ -39,16 +39,16 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write($"'message0':'%{{BKY_{key}}}',");
 			_blocksWriter.Write("'args0':[");
 			_blocksWriter.Write("{");
-			_blocksWriter.Write($"'type':'input_statement',");
-			_blocksWriter.Write($"'name':'statement',");
+			_blocksWriter.Write("'type':'input_statement',");
+			_blocksWriter.Write("'name':'statement',");
 			_blocksWriter.Write("},");
 			_generatorWriter.Write($"'{key}':function(b,g){{");
 			var code = $"`function {match.Groups[1].Value}(event) {{\\n${{g.statementToCode(b, 'statement')}}}}`";
 			_blocksWriter.Write("],");
 			_generatorWriter.Write($"return {code};");
-			_blocksWriter.Write($"'colour':60,");
+			_blocksWriter.Write("'colour':60,");
 			_blocksWriter.Write("},");
-			_generatorWriter.Write($"}},");
+			_generatorWriter.Write("},");
 
 			AddBlockToToolbox(key);
 		}
@@ -73,9 +73,9 @@ namespace CnpcBlockly.Generator {
 			_generatorWriter.Write($"'{key}':function(b,g){{");
 			_blocksWriter.Write($"'output':[{GetInheritanceChain(field.Type)}],");
 			_generatorWriter.Write($"return [`event.{field.Name}`,Order.MEMBER];");
-			_blocksWriter.Write($"'colour':30,");
+			_blocksWriter.Write("'colour':30,");
 			_blocksWriter.Write("},");
-			_generatorWriter.Write($"}},");
+			_generatorWriter.Write("},");
 
 			AddBlockToToolbox(key);
 		}
@@ -95,18 +95,18 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write("'args0':[");
 			_generatorWriter.Write($"'{key}':function(b,g){{");
 			_blocksWriter.Write("{");
-			_blocksWriter.Write($"'type':'input_value',");
-			_blocksWriter.Write($"'name':'value',");
+			_blocksWriter.Write("'type':'input_value',");
+			_blocksWriter.Write("'name':'value',");
 			_blocksWriter.Write($"'check':'{field.Type.FullName}',");
 			_blocksWriter.Write("},");
-			_generatorWriter.Write($"const $value=g.valueToCode(b,'value',Order.ASSIGNMENT);");
+			_generatorWriter.Write("const $value=g.valueToCode(b,'value',Order.ASSIGNMENT);");
 			_blocksWriter.Write("],");
 			_generatorWriter.Write($"return `event.{field.Name} = ${{$value}};\\n`;");
-			_blocksWriter.Write($"'previousStatement':null,");
-			_blocksWriter.Write($"'nextStatement':null,");
-			_blocksWriter.Write($"'colour':0,");
+			_blocksWriter.Write("'previousStatement':null,");
+			_blocksWriter.Write("'nextStatement':null,");
+			_blocksWriter.Write("'colour':0,");
 			_blocksWriter.Write("},");
-			_generatorWriter.Write($"}},");
+			_generatorWriter.Write("},");
 
 			AddBlockToToolbox(key);
 		}

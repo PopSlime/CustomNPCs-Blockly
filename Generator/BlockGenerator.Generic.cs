@@ -57,9 +57,9 @@ namespace CnpcBlockly.Generator {
 			_blocksWriter.Write("],");
 			_blocksWriter.Write($"'output':[{GetInheritanceChain(field.Type)}],");
 			_generatorWriter.Write($"return [`{GenerateThisReference(type, typeKey, field)}.{field.Name}`,Order.MEMBER];");
-			_blocksWriter.Write($"'colour':30,");
+			_blocksWriter.Write("'colour':30,");
 			_blocksWriter.Write("},");
-			_generatorWriter.Write($"}},");
+			_generatorWriter.Write("},");
 
 			AddBlockToToolbox(key);
 		}
@@ -75,18 +75,18 @@ namespace CnpcBlockly.Generator {
 			_generatorWriter.Write($"'{key}':function(b,g){{");
 			if (!field.IsStatic) GenerateThisArgument(type);
 			_blocksWriter.Write("{");
-			_blocksWriter.Write($"'type':'input_value',");
-			_blocksWriter.Write($"'name':'value',");
+			_blocksWriter.Write("'type':'input_value',");
+			_blocksWriter.Write("'name':'value',");
 			_blocksWriter.Write($"'check':'{field.Type.FullName}',");
 			_blocksWriter.Write("},");
-			_generatorWriter.Write($"const $value=g.valueToCode(b,'value',Order.ASSIGNMENT);");
+			_generatorWriter.Write("const $value=g.valueToCode(b,'value',Order.ASSIGNMENT);");
 			_blocksWriter.Write("],");
 			_generatorWriter.Write($"return `{GenerateThisReference(type, typeKey, field)}.{field.Name} = ${{$value}};\\n`;");
-			_blocksWriter.Write($"'previousStatement':null,");
-			_blocksWriter.Write($"'nextStatement':null,");
-			_blocksWriter.Write($"'colour':0,");
+			_blocksWriter.Write("'previousStatement':null,");
+			_blocksWriter.Write("'nextStatement':null,");
+			_blocksWriter.Write("'colour':0,");
 			_blocksWriter.Write("},");
-			_generatorWriter.Write($"}},");
+			_generatorWriter.Write("},");
 
 			AddBlockToToolbox(key);
 		}
@@ -114,7 +114,7 @@ namespace CnpcBlockly.Generator {
 			if (!isStaticOrSingleton) GenerateThisArgument(type);
 			foreach (var param in method.Parameters) {
 				_blocksWriter.Write("{");
-				_blocksWriter.Write($"'type':'input_value',");
+				_blocksWriter.Write("'type':'input_value',");
 				_blocksWriter.Write($"'name':'{param.Name}',");
 				_blocksWriter.Write($"'check':'{param.Type.FullName}',");
 				_blocksWriter.Write("'align':'RIGHT',");
@@ -128,33 +128,33 @@ namespace CnpcBlockly.Generator {
 				_blocksWriter.Write($"'output':[{GetInheritanceChain(method.ReturnType)}],");
 				_generatorWriter.Write($"return [`{code}`,Order.FUNCTION_CALL];");
 				if (getFlag)
-					_blocksWriter.Write($"'colour':180,");
+					_blocksWriter.Write("'colour':180,");
 				else
-					_blocksWriter.Write($"'colour':120,");
+					_blocksWriter.Write("'colour':120,");
 			}
 			else {
 				_generatorWriter.Write($"return `{code};\\n`;");
-				_blocksWriter.Write($"'previousStatement':null,");
-				_blocksWriter.Write($"'nextStatement':null,");
+				_blocksWriter.Write("'previousStatement':null,");
+				_blocksWriter.Write("'nextStatement':null,");
 				if (setFlag)
-					_blocksWriter.Write($"'colour':90,");
+					_blocksWriter.Write("'colour':90,");
 				else
-					_blocksWriter.Write($"'colour':150,");
+					_blocksWriter.Write("'colour':150,");
 			}
 			_blocksWriter.Write("},");
-			_generatorWriter.Write($"}},");
+			_generatorWriter.Write("},");
 
 			AddBlockToToolbox(key);
 		}
 
 		void GenerateThisArgument(JavaType type) {
 			_blocksWriter.Write("{");
-			_blocksWriter.Write($"'type':'input_value',");
-			_blocksWriter.Write($"'name':'this',");
+			_blocksWriter.Write("'type':'input_value',");
+			_blocksWriter.Write("'name':'this',");
 			_blocksWriter.Write($"'check':'{type.FullName}',");
 			_blocksWriter.Write("'align':'RIGHT',");
 			_blocksWriter.Write("},");
-			_generatorWriter.Write($"const $this=g.valueToCode(b,'this',Order.MEMBER);");
+			_generatorWriter.Write("const $this=g.valueToCode(b,'this',Order.MEMBER);");
 		}
 
 		static string GenerateThisReference(JavaType type, string typeKey, JavaMember member, JavaMethod? singletonMethod = null) => member.IsStatic
