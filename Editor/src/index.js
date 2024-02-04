@@ -70,6 +70,17 @@ $('#select-language').on('change', e => {
 
 $('#tool-open').on('click', () => { loadFromFile(ws); });
 $('#tool-save').on('click', () => { saveToFile(ws); });
+blocklyDiv.on('dragover', e => {
+	e.stopPropagation();
+	e.preventDefault();
+	e.originalEvent.dataTransfer.dropEffect = 'copy';
+});
+blocklyDiv.on('drop', e => {
+	e.stopPropagation();
+	e.preventDefault();
+	loadFromFile(ws, e.originalEvent.dataTransfer.files[0]);
+});
+
 const updateOutput = () => {
 	codeDiv.html(hljs.highlight(javascriptGenerator.workspaceToCode(ws), { language: 'javascript' }).value);
 };
