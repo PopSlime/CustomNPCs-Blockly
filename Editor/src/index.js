@@ -13,7 +13,7 @@ import 'highlight.js/styles/default.css';
 
 import * as Blockly from 'blockly';
 import { javascriptGenerator } from 'blockly/javascript';
-import { save, load } from './serialization';
+import { saveWorkspace, loadWorkspace, saveToFile, loadFromFile } from './serialization';
 
 import { blocks as eventBlocks } from './event-bus-api/blocks';
 import { forBlock as eventForBlocks } from './event-bus-api/generator';
@@ -68,16 +68,18 @@ $('#select-language').on('change', e => {
 	location.reload();
 });
 
+$('#tool-open').on('click', () => { loadFromFile(ws); });
+$('#tool-save').on('click', () => { saveToFile(ws); });
 const updateOutput = () => {
 	codeDiv.html(hljs.highlight(javascriptGenerator.workspaceToCode(ws), { language: 'javascript' }).value);
 };
 
-load(ws);
+loadWorkspace(ws);
 updateOutput();
 
 ws.addChangeListener(e => {
 	if (e.isUiEvent) return;
-	save(ws);
+	saveWorkspace(ws);
 });
 
 ws.addChangeListener(e => {
