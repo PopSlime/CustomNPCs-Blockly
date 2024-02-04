@@ -48,6 +48,35 @@ pre, code {
 			display: block;
 		}
 
+#toolbar-container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+#toolbar {
+	display: flex;
+	margin-inline: 1em;
+}
+
+	#toolbar > span {
+		margin-inline: 0.5em;
+		border: solid 1px #bbb;
+		border-radius: 4px;
+		padding-block: 0.125em;
+		padding-inline: 1em;
+		user-select: none;
+		cursor: pointer;
+	}
+
+		#toolbar > span:hover {
+			background-color: #eee;
+		}
+
+		#toolbar > span:active {
+			background-color: #ddd;
+		}
+
 #tabs {
 	display: flex;
 }
