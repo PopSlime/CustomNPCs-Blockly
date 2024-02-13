@@ -96,15 +96,21 @@ namespace CnpcBlockly.Generator {
 		void GenerateMethod(JavaType type, string typeKey, JavaMethod method, JavaMethod? singletonMethod = null) {
 			var isStaticOrSingleton = method.IsStatic || singletonMethod != null;
 
-			var key = $"CNPC_M_{typeKey}_3{method.Name}_4{string.Join("_5", method.Parameters.Select(p => GetTypeKey(p.Type)))}".ToUpperInvariant();
-			_msgWriter.Write(isStaticOrSingleton
-				? $"'{key}':'{method.Name}({string.Join(", ", method.Parameters.Select((p, i) => $"{p.Name} = %{i + 1}"))})',"
-				: $"'{key}':'%1.{method.Name}({string.Join(", ", method.Parameters.Select((p, i) => $"{p.Name} = %{i + 2}"))})',"
-			);
+			var sigKey = $"{typeKey}_3{method.Name}_4{string.Join("_5", method.Parameters.Select(p => GetTypeKey(p.Type)))}".ToUpperInvariant();
+			var key = $"CNPC_M_{sigKey}";
+			var msg = isStaticOrSingleton
+				? $"{method.Name}({string.Join(", ", method.Parameters.Select((p, i) => $"{p.Name} = %{i + 1}"))})"
+				: $"%1.{method.Name}({string.Join(", ", method.Parameters.Select((p, i) => $"{p.Name} = %{i + 2}"))})";
+			_msgWriter.Write($"'{key}':'{msg}',");
 
 			var prefix = MethodPrefix().Match(method.Name).Value;
 			bool getFlag = (prefix is "get" or "in" or "is" or "has" or "can") && method.ReturnType != null && method.Parameters.Count == 0;
 			bool setFlag = (prefix is "set") && method.ReturnType == null && method.Parameters.Count == 1;
+			bool mutatingFlag = method.Tags.Contains("method-mutating") && method.ReturnType != null;
+
+			if (mutatingFlag) {
+				_msgWriter.Write($"'CNPC_MR_{sigKey}':'output -> ',");
+			}
 
 			_blocksWriter.Write("{");
 			_blocksWriter.Write($"'type':'{key}',");
@@ -124,8 +130,9 @@ namespace CnpcBlockly.Generator {
 			}
 			var code = $"{GenerateThisReference(type, typeKey, method, singletonMethod)}.{method.Name}({string.Join(", ", method.Parameters.Select(p => $"${{_{p.Name}}}"))})";
 			_blocksWriter.Write("],");
-			if (method.ReturnType != null) {
-				_blocksWriter.Write($"'output':[{GetInheritanceChain(method.ReturnType)}],");
+			if (method.ReturnType != null)
+				_blocksWriter.Write($"'output':[{GetInheritanceChain(method.ReturnType!)}],");
+			if (method.ReturnType != null && !mutatingFlag) {
 				_generatorWriter.Write($"return [`{code}`,Order.FUNCTION_CALL];");
 				if (getFlag)
 					_blocksWriter.Write("'colour':180,");
@@ -133,13 +140,19 @@ namespace CnpcBlockly.Generator {
 					_blocksWriter.Write("'colour':120,");
 			}
 			else {
-				_generatorWriter.Write($"return `{code};\\n`;");
 				_blocksWriter.Write("'previousStatement':null,");
 				_blocksWriter.Write("'nextStatement':null,");
 				if (setFlag)
 					_blocksWriter.Write("'colour':90,");
 				else
 					_blocksWriter.Write("'colour':150,");
+				if (mutatingFlag) {
+					_generatorWriter.Write("const _return=b.getFieldValue('return');");
+					code = "${_return?`${g.getVariableName(_return)} = `:''}" + code;
+					_blocksWriter.Write("'extensions':['INIT_MUTATOR_METHOD_MUTATING','MIXIN_MUTATOR_METHOD_MUTATING'],");
+					_blocksWriter.Write("'mutator':'MUTATOR_METHOD_MUTATING',");
+				}
+				_generatorWriter.Write($"return `{code};\\n`;");
 			}
 			_blocksWriter.Write("},");
 			_generatorWriter.Write("},");
