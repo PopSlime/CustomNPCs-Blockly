@@ -33,6 +33,7 @@ namespace CnpcBlockly.Generator.Parser {
 		static readonly XName A = XName.Get("a");
 		static readonly XName CLASS = XName.Get("class");
 		static readonly XName H3 = XName.Get("h3");
+		static readonly XName I = XName.Get("i");
 		static readonly XName ID = XName.Get("id");
 		static readonly XName TITLE = XName.Get("title");
 		static readonly XName UL = XName.Get("ul");
@@ -111,12 +112,20 @@ namespace CnpcBlockly.Generator.Parser {
 			BaseType = ParseTypeReference(domain, splitter.GetJavaType() ?? throw new JavaApiFormatException());
 		}
 
+		static T ParseTags<T>(T member, XElement el) where T : JavaMember {
+			foreach (var t in el.Descendants(I).Select(i => i.Attribute(CLASS)?.Value)) {
+				if (t == null) continue;
+				member.Tags.Add(t);
+			}
+			return member;
+		}
+
 		void ParseField(Domain domain, XElement fel) {
 			var name = fel.Descendants(H3).First().Value;
 			var sigel = fel.Descendants().First(e => e.Attribute(CLASS)?.Value == "member-signature");
 			ParseModifiers(sigel, out var isStatic, out var isFinal);
 			var returnType = ParseTypeReference(domain, sigel.Descendants().First(e => e.Attribute(CLASS)?.Value == "return-type")) ?? throw new JavaApiFormatException();
-			m_fields.Add(new(name, isStatic, isFinal, returnType));
+			m_fields.Add(ParseTags<JavaField>(new(name, isStatic, isFinal, returnType), fel));
 		}
 
 		void ParseMethod(Domain domain, XElement mel) {
@@ -155,7 +164,7 @@ namespace CnpcBlockly.Generator.Parser {
 				}
 			}
 		break_while:
-			m_methods.Add(new(name, isStatic, isFinal, returnType, parameters));
+			m_methods.Add(ParseTags<JavaMethod>(new(name, isStatic, isFinal, returnType, parameters), mel));
 		}
 
 		static void ParseModifiers(XElement sigel, out bool isStatic, out bool isFinal) {
