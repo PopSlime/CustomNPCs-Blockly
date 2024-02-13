@@ -45,11 +45,11 @@ export const msg = {
 Blockly.Extensions.register(
 	'CNPC_VFG_NOPPES_1NPCS_1API_1EVENT_1BLOCKEVENT_3BLOCK',
 	function () {
-		var block = this;
+		const block = this;
 		function updateOutput(value) {
 			block.setOutput(true, [value, 'noppes/npcs/api/block/IBlock', 'Object']);
 		}
-		var field = this.getField('output');
+		const field = this.getField('output');
 		updateOutput(field.getValue());
 		field.setValidator(function (option) { updateOutput(option); });
 	}
