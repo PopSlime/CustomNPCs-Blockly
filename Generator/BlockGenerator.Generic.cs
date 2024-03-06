@@ -104,8 +104,9 @@ namespace CnpcBlockly.Generator {
 			_msgWriter.Write($"'{key}':'{msg}',");
 
 			var prefix = MethodPrefix().Match(method.Name).Value;
+			bool chainingFlag = method.Tags.Contains("method-chaining") && method.ReturnType != null;
 			bool getFlag = (prefix is "get" or "in" or "is" or "has" or "can") && method.ReturnType != null && method.Parameters.Count == 0;
-			bool setFlag = (prefix is "set") && method.ReturnType == null && method.Parameters.Count == 1;
+			bool setFlag = (prefix is "set") && (method.ReturnType == null || chainingFlag) && method.Parameters.Count == 1;
 			bool mutatingFlag = method.Tags.Contains("method-mutating") && method.ReturnType != null;
 
 			if (mutatingFlag) {
@@ -130,9 +131,9 @@ namespace CnpcBlockly.Generator {
 			}
 			var code = $"{GenerateThisReference(type, typeKey, method, singletonMethod)}.{method.Name}({string.Join(", ", method.Parameters.Select(p => $"${{_{p.Name}}}"))})";
 			_blocksWriter.Write("],");
-			if (method.ReturnType != null)
+			if (method.ReturnType != null && !chainingFlag)
 				_blocksWriter.Write($"'output':[{GetInheritanceChain(method.ReturnType!)}],");
-			if (method.ReturnType != null && !mutatingFlag) {
+			if (method.ReturnType != null && !mutatingFlag && !chainingFlag) {
 				_generatorWriter.Write($"return [`{code}`,Order.FUNCTION_CALL];");
 				if (getFlag)
 					_blocksWriter.Write("'colour':180,");
